@@ -1,0 +1,91 @@
+<html>
+	<head>
+		<title>Simply Mongo</title>
+		<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>		
+		<script>
+			var dfltQ={}
+			$(document).ready(function() {
+				$.ajax("cmd/pictures.bydate.grouped",{
+					success:function(data,status,jqxhr){
+						var years = data.results[0];
+						var nav=$("#navigator");
+						for(var i=0;i<years.length;i++){
+							var year = years[i];
+							var h3=$("<h3/>").addClass("category").addClass("year").text(year._id+" ("+year.count+")").appendTo(nav);
+							var div=$("<div/>").addClass("category-container").appendTo(nav);
+							for(var j=0;j<year.months.length;j++){
+								var month=year.months[j];
+								var h=$("<h3/>")
+									.addClass("category")
+									.addClass("month")
+									.text(month.month+" ("+month.count+")")
+									.appendTo(div)
+									.data("year",year._id)
+									.data("month",month.month)
+									.on("toggle",function(){
+										var $t=$(this);
+										if(!$t.attr("imagesLoaded")){
+											loadImages($t.data("year"),$t.data("month"),$t.next(".category-container"))
+											$t.attr("imagesLoaded",true);
+										}
+									});
+								var d=$("<div/>").addClass("category-container").appendTo(div);
+							}
+						}
+						categorize();
+					}
+				})
+			});
+			function categorize(){
+				$(".category").each(function(i,e){
+					$(e).click(function(e){
+						var sib=$(this).trigger("toggle").next(".category-container").slideToggle();
+						
+					})
+				})
+			}
+			function loadImages(y,m,container){
+				
+				var sd = $.datepicker.formatDate("yy-mm-dd",new Date(y,m-1));
+				var ed = $.datepicker.formatDate("yy-mm-dd",new Date(y,m));
+				
+				var url = "cmd/pictures.bymonth/"+y+"/"+m
+				
+				$.ajax(url,{success:function(data,status,jqxhr){
+					for(var i=0;i<data.results.length;i++){
+						var img=data.results[i];
+						var url = "thumb/"+img._id;
+						container.append($("<img width='50'/>").attr("width","50").attr("src",url).addClass("thumbnail"));
+					}
+				}});
+			}
+		</script>
+		<style>
+			.category{
+				cursor:pointer;
+			}
+			.category-container{
+				padding-left:10px;
+				display:none;
+			}
+			.year{
+				font-size:12pt;
+				font-weight:bold;
+				color:blue;
+			}
+			.month{
+				font-size:10pt;
+				font-weight:bold;
+			}
+			.thumbnail{
+				padding:4px;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="navigator" class="accordion">
+		</div>
+	</body>
+</html>

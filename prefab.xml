@@ -1,0 +1,54 @@
+<prefabs>
+	<prefab name="pictures.bydate" action="aggregate">
+	<![CDATA[[
+		{ "$group" : 
+			{ "_id" : 
+				{ 
+					"year" : { "$year" : "$modified"} 
+					,"month" : { "$month" : "$modified"}
+				} 
+				, "count" : { "$sum" : 1}
+			}
+		},
+		{$project:
+			{
+				_id:false
+				,year:"$_id.year"
+				,month:"$_id.month"
+				,count:"$count"
+			}
+		},
+		{$sort:{year:-1,month:-1}}]]]>
+	</prefab>
+	<prefab name="pictures.bydate.grouped" action="aggregate">
+	<![CDATA[
+	[
+		{"$group" : 
+			{ "_id" : 
+				{ 
+					"year" : 	{ "$year" : "$modified"} 
+					,"month" :	{ "$month" : "$modified"}
+				} 
+				, "count" :	{ "$sum" : 1}
+			}
+		}
+		,{$project:
+			{_id:false
+				,year:"$_id.year"
+				,month:"$_id.month"
+				,count:"$count"
+			}
+		}
+		,{$group:
+			{
+				_id:"$year"
+				,count:{"$sum":"$count"}
+				,months:
+					{"$push":
+						{"month":"$month","count":"$count"}
+					}
+			}
+		}
+		,{$sort:{_id:-1,month:-1}}]]]>
+	</prefab>
+</prefabs>
